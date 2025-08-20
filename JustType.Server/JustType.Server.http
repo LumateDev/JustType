@@ -1,0 +1,6 @@
+@JustType.Server_HostAddress = http://localhost:5068
+
+GET {{JustType.Server_HostAddress}}/justtype/
+Accept: application/json
+
+###

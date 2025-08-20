@@ -1,0 +1,77 @@
+# Общие системные файлы
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Файлы IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Файлы пользователей
+*.user
+*.userosscache
+*.sln.docstates
+
+# ========== .NET ==========
+# Сборки
+[Bb]in/
+[Oo]bj/
+[Pp]ublish/
+
+# Файлы пакетов
+*.nupkg
+
+# Резервные копии и файлы преобразований
+*.[Pp]ublish.xml
+*.backup.*
+*.backup
+
+# Файлы пакетов NuGet
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+
+# ========== Vue/TypeScript ==========
+# Зависимости
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Сборка
+dist/
+build/
+*.tsbuildinfo
+
+# Локальные файлы настроек
+.env
+.env.local
+.env.*.local
+
+# Логи
+logs
+*.log
+
+# Кэш
+.cache/
+.parcel-cache/
+
+# Тесты
+coverage/
+*.lcov
+
+# ========== Docker ==========
+# Docker
+.docker/
+
+
+# .env
+!.env.example
+!.env.development
