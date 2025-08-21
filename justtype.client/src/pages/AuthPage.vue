@@ -1,0 +1,10 @@
+<template>
+  <div class="auth">Auth</div>
+</template>
+
+<script setup lang="ts">
+
+</script>
+
+<style scoped>
+</style>
