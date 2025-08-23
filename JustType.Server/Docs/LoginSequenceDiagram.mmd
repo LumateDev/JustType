@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant Client
+    participant AuthController
+    participant AuthService
+    participant Database
+    participant TokenService
+    Client->>AuthController: POST /api/auth/login
+    AuthController->>AuthService: LoginAsync(loginDto)
+    AuthService->>Database: Find user by login
+    Database-->>AuthService: User data
+    AuthService->>AuthService: Verify password with BCrypt
+    AuthService->>Database: Delete old refresh tokens
+    AuthService->>TokenService: GenerateRefreshToken()
+    TokenService-->>AuthService: New refresh token
+    AuthService->>Database: Save new refresh token
+    AuthService->>TokenService: CreateToken(user)
+    TokenService-->>AuthService: JWT access token
+    AuthService-->>AuthController: LoginResponseDto
+    AuthController-->>Client: { accessToken, refreshToken }

@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant Client
+    participant AuthController
+    participant AuthService
+    participant Database
+    participant TokenService
+
+    Client->>AuthController: POST /api/auth/refresh
+    AuthController->>AuthService: RefreshTokenAsync(refreshToken)
+    AuthService->>Database: Find refresh token
+    Database-->>AuthService: RefreshToken entity
+    AuthService->>AuthService: Check if token active and not expired
+    AuthService->>Database: Revoke old refresh token
+    AuthService->>TokenService: GenerateRefreshToken()
+    TokenService-->>AuthService: New refresh token
+    AuthService->>Database: Save new refresh token
+    AuthService->>TokenService: CreateToken(user)
+    TokenService-->>AuthService: New JWT access token
+    AuthService-->>AuthController: LoginResponseDto
+    AuthController-->>Client: { newAccessToken, newRefreshToken }

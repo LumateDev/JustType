@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant Client
+    participant ProtectedController
+    participant JwtMiddleware
+
+    Client->>ProtectedController: GET /api/profile + Authorization: Bearer <accessToken>
+    JwtMiddleware->>JwtMiddleware: Validate token signature
+    JwtMiddleware->>JwtMiddleware: Check expiration
+    JwtMiddleware->>JwtMiddleware: Extract claims
+    JwtMiddleware-->>ProtectedController: User context with claims
+    ProtectedController-->>Client: User profile data
