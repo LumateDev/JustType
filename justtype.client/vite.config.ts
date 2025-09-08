@@ -47,7 +47,7 @@ export default defineConfig({
     },
     server: {
         proxy: {
-            '^/justtype': {
+            '^/api': {
                 target,
                 secure: false
             }

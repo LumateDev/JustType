@@ -1,0 +1,69 @@
+@keyframes auth-morphing {
+  0%,
+  100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+  25% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+  }
+  50% {
+    border-radius: 50% 60% 60% 50% / 60% 50% 50% 60%;
+  }
+  75% {
+    border-radius: 60% 40% 60% 50% / 60% 30% 70% 40%;
+  }
+}
+
+@keyframes auth-float-1 {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  33% {
+    transform: translate(30px, -30px) rotate(120deg) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) rotate(240deg) scale(0.9);
+  }
+}
+
+@keyframes auth-float-2 {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  33% {
+    transform: translate(-40px, 20px) rotate(-120deg) scale(0.9);
+  }
+  66% {
+    transform: translate(20px, -40px) rotate(-240deg) scale(1.1);
+  }
+}
+
+@keyframes auth-float-3 {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(-30px, -30px) rotate(180deg);
+  }
+}
+
+@keyframes auth-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+$auth-morphing: "auth-morphing";
+$auth-float-1: "auth-float-1";
+$auth-float-2: "auth-float-2";
+$auth-float-3: "auth-float-3";
+$auth-progress: "auth-progress";

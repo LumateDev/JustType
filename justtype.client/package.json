@@ -15,9 +15,10 @@
     "lint": "eslint . --fix"
   },
   "dependencies": {
-    "@element-plus/icons-vue": "^2.3.2",
+    "@headlessui/vue": "^1.7.23",
+    "@mdi/js": "^7.4.47",
+    "@vueuse/core": "^13.9.0",
     "axios": "^1.11.0",
-    "element-plus": "^2.10.7",
     "normalize.css": "^8.0.1",
     "pinia": "^3.0.3",
     "vue": "^3.5.18",

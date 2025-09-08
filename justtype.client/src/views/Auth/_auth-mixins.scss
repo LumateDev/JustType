@@ -1,0 +1,68 @@
+@use './auth-variables' as vars;
+
+@mixin auth-card {
+  background: var(--color-surface);
+  border-radius: vars.$auth-card-radius;
+  padding: vars.$auth-card-padding;
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
+  animation: fadeIn 0.6s ease-out;
+
+  @media (max-width: 640px) {
+    padding: vars.$auth-card-padding-mobile;
+    border-radius: vars.$auth-card-radius-mobile;
+  }
+}
+
+@mixin auth-button {
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: var(--color-primary);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+
+  &:hover:not(:disabled) {
+    background: var(--color-primaryHover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+@mixin social-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text);
+  background: var(--color-background);
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surfaceHover);
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+  }
+}
