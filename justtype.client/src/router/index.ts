@@ -57,6 +57,27 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
 
+    {
+      path: "/privacy",
+      name: "privacy",
+      component: () => import("@/views/Policy/PrivacyView.vue"),
+      meta: {
+        requiresAuth: false,
+        hideHeader: false,
+        hideFooter: false,
+      },
+    },
+    {
+      path: "/cookies",
+      name: "cookies",
+      component: () => import("@/views/Policy/CookiesView.vue"),
+      meta: {
+        requiresAuth: false,
+        hideHeader: false,
+        hideFooter: false,
+      },
+    },
+
     // WIP страницы
     {
       path: "/admin",
