@@ -14,6 +14,8 @@ namespace JustType.Server
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            var env = builder.Environment;
+            Console.WriteLine($"Current environment: {env.EnvironmentName}");
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
