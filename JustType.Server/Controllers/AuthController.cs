@@ -25,15 +25,12 @@ namespace JustType.Server.Controllers
             try
             {
                 var user = await _authService.RegisterAsync(registerDto);
-                if (user == null)
-                    return BadRequest(new { Message = "User with this username already exists." });
-
                 return Ok(new { Message = "User registered successfully.", UserId = user.Id });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during registration");
-                return StatusCode(500, new { Message = "An error occurred during registration." });
+                throw;
             }
         }
 
@@ -43,33 +40,27 @@ namespace JustType.Server.Controllers
             try
             {
                 var result = await _authService.LoginAsync(loginDto);
-                if (result == null)
-                    return Unauthorized(new { Message = "Invalid username or password." });
-
                 return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during login");
-                return StatusCode(500, new { Message = "An error occurred during login." });
+                throw;
             }
         }
 
         [HttpPost("login/email")]
-        public async Task<IActionResult> LoginByEmail (LoginByEmailDto loginDto)
+        public async Task<IActionResult> LoginByEmail(LoginByEmailDto loginDto)
         {
             try
             {
                 var result = await _authService.LoginAsync(loginDto);
-                if (result == null)
-                    return Unauthorized(new { Message = "Invalid email or password." });
-
                 return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during login");
-                return StatusCode(500, new { Message = "An error occurred during login." });
+                throw;
             }
         }
 
@@ -79,15 +70,12 @@ namespace JustType.Server.Controllers
             try
             {
                 var result = await _authService.RefreshTokenAsync(refreshTokenDto.RefreshToken);
-                if (result == null)
-                    return Unauthorized(new { Message = "Invalid refresh token." });
-
                 return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during token refresh");
-                return StatusCode(500, new { Message = "An error occurred during token refresh." });
+                throw;
             }
         }
 
@@ -106,7 +94,7 @@ namespace JustType.Server.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during token revocation");
-                return StatusCode(500, new { Message = "An error occurred during token revocation." });
+                throw;
             }
         }
 

@@ -1,5 +1,4 @@
 ﻿using JustType.Server.Entities.Enums;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace JustType.Server.Entities
@@ -26,5 +25,14 @@ namespace JustType.Server.Entities
 
         [Required]
         public UserRole Role { get; set; } = UserRole.User;
+
+        public User() { }
+
+        // Метод для нормализации данных перед сохранением
+        public void Normalize()
+        {
+            Username = Username?.ToLowerInvariant().Trim() ?? string.Empty;
+            Email = Email?.ToLowerInvariant().Trim() ?? string.Empty;
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using JustType.Server.Exceptions;
+using System.Net;
 using System.Text.Json;
 
 namespace JustType.Server.Middlewares
@@ -29,13 +30,44 @@ namespace JustType.Server.Middlewares
 
         private static Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            var code = HttpStatusCode.InternalServerError;
-            var result = JsonSerializer.Serialize(new { error = "An internal server error has occurred." });
+            HttpStatusCode code;
+            string message;
 
-            // Добавить обработку конкретных типов исключений
-            // if (exception is MyNotFoundException) code = HttpStatusCode.NotFound;
-            // else if (exception is MyUnauthorizedException) code = HttpStatusCode.Unauthorized;
+            switch (exception)
+            {
+                case UserNotFoundException:
+                    code = HttpStatusCode.NotFound;
+                    message = exception.Message;
+                    break;
 
+                case InvalidPasswordException:
+                case InvalidRefreshTokenException:
+                    code = HttpStatusCode.Unauthorized;
+                    message = exception.Message;
+                    break;
+
+                case UserNotActiveException:
+                    code = HttpStatusCode.Forbidden;
+                    message = exception.Message;
+                    break;
+
+                case UserAlreadyExistsException:
+                    code = HttpStatusCode.Conflict;
+                    message = exception.Message;
+                    break;
+
+                case AuthException:
+                    code = HttpStatusCode.BadRequest;
+                    message = exception.Message;
+                    break;
+
+                default:
+                    code = HttpStatusCode.InternalServerError;
+                    message = "An internal server error has occurred.";
+                    break;
+            }
+
+            var result = JsonSerializer.Serialize(new { error = message });
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)code;
             return context.Response.WriteAsync(result);
