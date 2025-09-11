@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useUserStore } from "@/stores/userStore";
+import router from "@/router";
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/api",
@@ -15,22 +16,27 @@ apiClient.interceptors.request.use((config) => {
   }
   return config;
 });
+
 // Response interceptor
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Проверяем, что это не запрос на логин/регистрацию
+    const isAuthEndpoint =
+      originalRequest.url?.includes("/auth/login") ||
+      originalRequest.url?.includes("/auth/register");
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem("refreshToken");
         if (!refreshToken) throw new Error("No refresh token");
 
-        // Используем apiClient вместо axios!
         const response = await apiClient.post("/auth/refresh", {
-          refreshToken
+          refreshToken,
         });
 
         const { accessToken, refreshToken: newRefreshToken } = response.data;
@@ -46,7 +52,9 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         const userStore = useUserStore();
         userStore.logout();
-        window.location.href = "/auth";
+
+        // Используем Vue Router вместо window.location
+        await router.push("/auth");
         return Promise.reject(refreshError);
       }
     }

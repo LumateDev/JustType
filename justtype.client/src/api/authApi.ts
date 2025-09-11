@@ -1,13 +1,32 @@
 import { apiClient } from "./axios";
 import type { LoginResponse, RegisterResponse } from "@/interfaces";
 
-export async function login(login: string, password: string): Promise<LoginResponse> {
-  const res = await apiClient.post<LoginResponse>("/auth/login", { login, password });
+export async function loginByUsername(username: string, password: string): Promise<LoginResponse> {
+  const res = await apiClient.post<LoginResponse>("/auth/login/username", {
+    username,
+    password,
+  });
   return res.data;
 }
 
-export async function register(login: string, password: string): Promise<RegisterResponse> {
-  const res = await apiClient.post<RegisterResponse>("/auth/register", { login, password });
+export async function loginByEmail(email: string, password: string): Promise<LoginResponse> {
+  const res = await apiClient.post<LoginResponse>("/auth/login/email", {
+    email,
+    password,
+  });
+  return res.data;
+}
+
+export async function register(
+  username: string,
+  email: string,
+  password: string
+): Promise<RegisterResponse> {
+  const res = await apiClient.post<RegisterResponse>("/auth/register", {
+    username,
+    email,
+    password,
+  });
   return res.data;
 }
 

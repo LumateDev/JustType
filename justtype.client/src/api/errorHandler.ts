@@ -9,20 +9,16 @@ export class ErrorHandler {
       const data = e.response?.data;
 
       // Общие ошибки
+      if (status === 400) return data?.error || "Неверный запрос";
       if (status === 401) return "Требуется авторизация";
-      if (status === 403) return "Недостаточно прав";
-      if (status === 404) return "Ресурс не найден";
-      if (status === 409) return "Конфликт данных";
-      if (status === 500) return "Внутренняя ошибка сервера";
+      if (status === 403) return "Доступ запрещен";
+      if (status === 404) return data?.error || "Ресурс не найден";
+      if (status === 409) return data?.error || "Конфликт данных";
+      if (status === 500) return data?.error || "Внутренняя ошибка сервера";
+      if (status === 502) return "Сервер недоступен";
+      if (status === 503) return "Сервис временно недоступен";
 
-      return (
-        data?.error ||
-        data?.Error ||
-        data?.message ||
-        data?.details ||
-        data?.Details ||
-        defaultMessage
-      );
+      return data?.error || data?.message || defaultMessage;
     }
 
     if (e instanceof Error) return e.message;
@@ -35,27 +31,32 @@ export class ErrorHandler {
       const status = e.response?.status;
       const data = e.response?.data;
 
-      if (status === 401) return "Неверный логин или пароль";
-      if (status === 404) return "Аккаунт не найден";
-      return data?.error || data?.Error || data?.message || "Ошибка авторизации";
+      // Специфичные сообщения для авторизации
+      if (status === 401) return data?.error || "Неверный логин или пароль";
+      if (status === 403) return data?.error || "Аккаунт заблокирован";
+      if (status === 404) return data?.error || "Пользователь не найден";
+      if (status === 409) return data?.error || "Пользователь уже существует";
+
+      return data?.error || "Ошибка авторизации";
     }
-    if (e instanceof Error) return e.message;
     return "Ошибка авторизации";
   }
 
   // Специализированный метод для ошибок администратора
   static getAdminErrorMessage(e: unknown): string {
+    const message = this.getErrorMessage(e, "Ошибка административной операции");
+
     if (axios.isAxiosError<ServerErrorResponse>(e)) {
       const status = e.response?.status;
       const data = e.response?.data;
 
+      // Дополнительная специфика для админки
       if (status === 401) return "Требуется авторизация администратора";
-      if (status === 403) return "Недостаточно прав администратора";
-      if (status === 409) return "Логин уже существует";
-      return data?.error || data?.Error || data?.message || "Ошибка административной операции";
+      if (status === 403) return data?.error || "Недостаточно прав администратора";
+
+      return data?.error || message;
     }
-    if (e instanceof Error) return e.message;
-    return "Ошибка административной операции";
+    return message;
   }
 
   // Метод для сетевых ошибок
@@ -63,6 +64,7 @@ export class ErrorHandler {
     if (axios.isAxiosError(e)) {
       if (e.code === "NETWORK_ERROR") return "Нет соединения с сервером";
       if (e.code === "ECONNABORTED") return "Превышено время ожидания";
+      if (e.response?.status === 0) return "Сервер недоступен";
       return "Сетевая ошибка";
     }
     return "Сетевая ошибка";
