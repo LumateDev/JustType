@@ -5,6 +5,7 @@
       <router-view />
     </main>
     <AppFooter v-if="showFooter" />
+    <MessageContainer />
   </div>
 </template>
 
@@ -15,6 +16,7 @@ import { useTheme } from "./composables/useTheme";
 import { onMounted } from "vue";
 import AppFooter from "./components/AppFooter.vue";
 import AppHeader from "./components/AppHeader.vue";
+import MessageContainer from "./components/MessageContainer.vue";
 
 const { applyTheme, currentTheme } = useTheme();
 const route = useRoute();

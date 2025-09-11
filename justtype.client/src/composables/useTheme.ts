@@ -19,6 +19,7 @@ interface ThemeColors {
   border: string;
   error: string;
   success: string;
+  warning: string;
   gradient: string;
 }
 
@@ -39,6 +40,7 @@ const themes: Record<Theme, ThemeColors> = {
     border: "#e2e8f0",
     error: "#ef4444",
     success: "#10b981",
+    warning: "#f97316",
     gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
   },
   dark: {
@@ -57,6 +59,7 @@ const themes: Record<Theme, ThemeColors> = {
     border: "#334155",
     error: "#f87171",
     success: "#34d399",
+    warning: "#fb923c",
     gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
   },
 };
