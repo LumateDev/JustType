@@ -1,5 +1,5 @@
 import { apiClient } from "./axios";
-import type { LoginResponse, RegisterResponse } from "@/interfaces";
+import type { LoginResponse, RegisterResponse, ProfileResponse } from "@/interfaces";
 
 export async function loginByUsername(username: string, password: string): Promise<LoginResponse> {
   const res = await apiClient.post<LoginResponse>("/auth/login/username", {
@@ -39,7 +39,7 @@ export async function revokeToken(refreshToken: string): Promise<void> {
   await apiClient.post("/auth/revoke", { refreshToken });
 }
 
-export async function getProfile(): Promise<any> {
-  const res = await apiClient.get("/auth/profile");
+export async function getProfile(): Promise<ProfileResponse> {
+  const res = await apiClient.get<ProfileResponse>("/auth/profile");
   return res.data;
 }

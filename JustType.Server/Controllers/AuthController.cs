@@ -1,4 +1,5 @@
-﻿using JustType.Server.DTOs.Auth;
+﻿using JustType.Server.DTOs;
+using JustType.Server.DTOs.Auth;
 using JustType.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -103,12 +104,19 @@ namespace JustType.Server.Controllers
         public IActionResult GetProfile()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var userLogin = User.FindFirstValue(ClaimTypes.Name);
-            var userRole = User.FindFirstValue(ClaimTypes.Role);
+            var username = User.FindFirstValue(ClaimTypes.Name);
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            var role = User.FindFirstValue(ClaimTypes.Role);
 
             if (userId == null) return Unauthorized();
 
-            return Ok(new { Id = userId, Login = userLogin, Role = userRole });
+            return Ok(new ProfileResponseDto
+            {
+                Id = userId,
+                Login = username ?? string.Empty,
+                Email = email ?? string.Empty,
+                Role = role ?? "User"
+            });
         }
     }
 }
