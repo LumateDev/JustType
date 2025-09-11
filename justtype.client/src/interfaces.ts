@@ -1,6 +1,7 @@
 export interface UserState {
   token: string | null;
   username: string | null;
+  email: string | null;
   isAdmin: boolean;
   userId: string | null;
 }
@@ -24,10 +25,23 @@ export interface RegisterResponse {
   userId: string;
 }
 
+export interface ProfileResponse {
+  id: string;
+  login: string;
+  role: string;
+  email?: string;
+}
+
 export interface JwtPayload {
-  exp?: number;
-  iat?: number;
-  sub?: string;
-  // TODO delete unknown
+  nbf?: number; // not before
+  exp?: number; // expiration time
+  iat?: number; // issued at
+  iss?: string; // issuer
+  aud?: string; // audience
+
+  nameid?: string;
+  unique_name?: string;
+  email?: string;
+  role?: string;
   [key: string]: unknown;
 }

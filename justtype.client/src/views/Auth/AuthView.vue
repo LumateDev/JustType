@@ -22,18 +22,22 @@
         </div>
 
         <form @submit.prevent="handleSubmit" class="auth-form">
-          <!-- Поле имени/username -->
+          <!-- Комбинированное поле для входа (username/email) -->
           <AnimatedInput
-            id="name"
-            v-model="formData.name"
-            label="Username"
-            placeholder="johndoe"
-            :error="errors.name"
-            @focus="clearError('name')"
-            @blur="validateField('name')"
+            id="identifier"
+            v-model="formData.identifier"
+            :label="isLogin ? 'Username or Email' : 'Username'"
+            :placeholder="isLogin ? 'username or you@example.com' : 'johndoe'"
+            :error="errors.identifier"
+            @focus="clearError('identifier')"
+            @blur="validateField('identifier')"
           >
             <template #prefix>
-              <MdiIcon :path="mdiAccount" :size="20" class="input-icon" />
+              <MdiIcon
+                :path="isLogin && isEmailInput ? mdiEmail : mdiAccount"
+                :size="20"
+                class="input-icon"
+              />
             </template>
           </AnimatedInput>
 
@@ -185,9 +189,10 @@ import { useRouter } from "vue-router";
 import AnimatedInput from "@/components/AnimatedInput.vue";
 import { mdiEye, mdiEyeOff, mdiEmail, mdiLock, mdiAccount, mdiGoogle, mdiGithub } from "@mdi/js";
 import MdiIcon from "@/components/MdiIcon.vue";
-import { login as loginRequest, register as registerRequest } from "@/api/authApi";
+import { loginByUsername, loginByEmail, register } from "@/api/authApi";
 import { getAuthErrorMessage, getErrorMessage } from "@/api/errorHandler";
 import { useUserStore } from "@/stores/userStore";
+import { notify } from "@/services/message";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -199,19 +204,23 @@ const rememberMe = ref(false);
 const isLoading = ref(false);
 
 const formData = reactive({
-  name: "",
-  email: "",
+  identifier: "", // Для входа: username или email
+  email: "", // Только для регистрации
   password: "",
   confirmPassword: "",
   agreement: false,
 });
 
 const errors = reactive({
-  name: "",
+  identifier: "",
   email: "",
   password: "",
   confirmPassword: "",
   agreement: "",
+});
+
+const isEmailInput = computed(() => {
+  return formData.identifier.includes("@");
 });
 
 // Расчет силы пароля
@@ -237,7 +246,6 @@ const passwordStrength = computed(() => {
   return { percentage: strength, level: "strong", text: "Strong" };
 });
 
-// Следим за изменением пароля для перепроверки подтверждения
 watch(
   () => formData.password,
   () => {
@@ -270,17 +278,17 @@ const clearError = (field: keyof typeof errors) => {
 // Вычисляемое свойство для проверки валидности формы
 const isFormValid = computed(() => {
   if (isLogin.value) {
-    // Для входа: имя и пароль
-    return formData.name && formData.password && !errors.name && !errors.password;
+    // Для входа: identifier и пароль
+    return formData.identifier && formData.password && !errors.identifier && !errors.password;
   } else {
-    // Для регистрации: имя, email, пароль, подтверждение и согласие
+    // Для регистрации: identifier (username), email, пароль, подтверждение и согласие
     return (
-      formData.name &&
+      formData.identifier &&
       formData.email &&
       formData.password &&
       formData.confirmPassword &&
       formData.agreement &&
-      !errors.name &&
+      !errors.identifier &&
       !errors.email &&
       !errors.password &&
       !errors.confirmPassword
@@ -290,19 +298,22 @@ const isFormValid = computed(() => {
 
 const validateField = (field: keyof typeof errors) => {
   switch (field) {
-    case "name":
-      // Валидация username для обоих режимов
-      if (!formData.name.trim()) {
-        errors.name = "Username is required";
-      } else if (formData.name.length < 3) {
-        errors.name = "Username must be at least 3 characters";
-      } else if (!/^[a-zA-Z0-9_-]+$/.test(formData.name)) {
-        errors.name = "Only letters, numbers, _ and - allowed";
+    case "identifier":
+      if (!formData.identifier.trim()) {
+        errors.identifier = isLogin.value
+          ? "Username or email is required"
+          : "Username is required";
+      } else if (!isLogin.value) {
+        // Валидация username только для регистрации
+        if (formData.identifier.length < 3) {
+          errors.identifier = "Username must be at least 3 characters";
+        } else if (!/^[a-zA-Z0-9_-]+$/.test(formData.identifier)) {
+          errors.identifier = "Only letters, numbers, _ and - allowed";
+        }
       }
       break;
 
     case "email":
-      // Валидация email только для регистрации
       if (!isLogin.value) {
         if (!formData.email.trim()) {
           errors.email = "Email is required";
@@ -335,10 +346,14 @@ const validateField = (field: keyof typeof errors) => {
 const validateForm = () => {
   let isValid = true;
 
-  // Валидация имени (только для регистрации)
+  // Валидация identifier
+  validateField("identifier");
+  if (errors.identifier) isValid = false;
+
+  // Валидация email (только для регистрации)
   if (!isLogin.value) {
-    validateField("name");
-    if (errors.name) isValid = false;
+    validateField("email");
+    if (errors.email) isValid = false;
 
     validateField("confirmPassword");
     if (errors.confirmPassword) isValid = false;
@@ -349,10 +364,6 @@ const validateForm = () => {
     }
   }
 
-  // Валидация email
-  validateField("email");
-  if (errors.email) isValid = false;
-
   // Валидация пароля
   validateField("password");
   if (errors.password) isValid = false;
@@ -361,58 +372,89 @@ const validateForm = () => {
 };
 
 const handleSubmit = async () => {
+  if (isLoading.value) return;
+
   if (!validateForm()) return;
 
   isLoading.value = true;
 
+  Object.keys(errors).forEach((key) => {
+    errors[key as keyof typeof errors] = "";
+  });
+
   try {
     if (isLogin.value) {
-      // Логика входа - используем username
-      const response = await loginRequest(formData.name, formData.password);
+      // Нормализуем identifier для логина
+      const normalizedIdentifier = formData.identifier.toLowerCase().trim();
+      let response;
 
-      // Сохраняем токены
+      if (isEmailInput.value) {
+        response = await loginByEmail(normalizedIdentifier, formData.password);
+      } else {
+        response = await loginByUsername(normalizedIdentifier, formData.password);
+      }
+
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("refreshToken", response.refreshToken);
 
-      // Если "Запомнить меня" активно
       if (rememberMe.value) {
-        localStorage.setItem("rememberUser", formData.name);
+        localStorage.setItem("rememberUser", normalizedIdentifier);
       }
 
-      // Обновляем store
       userStore.login(
         response.accessToken,
-        formData.name,
-        "" // userId будет получен из токена
+        normalizedIdentifier,
+        isEmailInput.value ? normalizedIdentifier : "",
+        ""
       );
 
-      // Переходим на главную
+      notify.success("Welcome back!");
       await router.push("/home");
     } else {
-      // Логика регистрации - регистрируем с username и паролем
-      await registerRequest(formData.name, formData.password);
+      // Нормализуем данные для регистрации
+      const normalizedUsername = formData.identifier.toLowerCase().trim();
+      const normalizedEmail = formData.email.toLowerCase().trim();
 
-      // Автоматически логинимся после регистрации
-      const loginResponse = await loginRequest(formData.name, formData.password);
+      const registerResponse = await register(
+        normalizedUsername,
+        normalizedEmail,
+        formData.password
+      );
 
-      // Сохраняем токены
+      const loginResponse = await loginByUsername(normalizedUsername, formData.password);
       localStorage.setItem("accessToken", loginResponse.accessToken);
       localStorage.setItem("refreshToken", loginResponse.refreshToken);
 
-      // Обновляем store
-      userStore.login(loginResponse.accessToken, formData.name, "");
+      userStore.login(
+        loginResponse.accessToken,
+        normalizedUsername,
+        normalizedEmail,
+        registerResponse.userId
+      );
 
-      // Переходим на главную
+      notify.success("Account created successfully!");
       await router.push("/home");
     }
   } catch (error) {
     console.error("Auth error:", error);
+
     const errorMessage = isLogin.value
       ? getAuthErrorMessage(error)
       : getErrorMessage(error, "Registration failed");
 
-    // Показываем ошибку в поле username
-    errors.name = errorMessage;
+    if (isLogin.value) {
+      notify.error(errorMessage);
+    } else {
+      if (errorMessage.toLowerCase().includes("email")) {
+        errors.email = errorMessage;
+      } else if (errorMessage.toLowerCase().includes("username")) {
+        errors.identifier = errorMessage;
+      } else if (errorMessage.toLowerCase().includes("password")) {
+        errors.password = errorMessage;
+      } else {
+        notify.error(errorMessage);
+      }
+    }
   } finally {
     isLoading.value = false;
   }

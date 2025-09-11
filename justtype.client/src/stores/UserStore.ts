@@ -6,33 +6,32 @@ export const useUserStore = defineStore("user", {
   state: (): UserState => ({
     token: localStorage.getItem("accessToken"),
     username: localStorage.getItem("username"),
+    email: localStorage.getItem("email"),
     userId: localStorage.getItem("userId"),
     isAdmin: localStorage.getItem("isAdmin") === "true",
   }),
 
   actions: {
-    login(token: string, username: string, userId: string) {
+    login(token: string, username: string, email: string, userId: string) {
       try {
         const payload = parseJwt(token);
-        const role = payload?.role;
-        const userIdFromToken = payload?.nameid || payload?.sub;
+        const userIdFromToken = payload?.nameid;
+        const usernameFromToken = payload?.unique_name;
+        const emailFromToken = payload?.email;
+        const roleFromToken = payload?.role;
 
         this.token = token;
-        this.username = username;
+        this.username = usernameFromToken || username;
+        this.email = emailFromToken || email;
         this.userId = userIdFromToken || userId;
-        this.isAdmin = role === "Admin";
+        this.isAdmin = roleFromToken === "Admin";
 
         localStorage.setItem("accessToken", token);
-        localStorage.setItem("username", username);
+        localStorage.setItem("username", this.username);
+        localStorage.setItem("email", this.email);
         localStorage.setItem("userId", this.userId || "");
         localStorage.setItem("isAdmin", String(this.isAdmin));
         localStorage.setItem("loginTimestamp", Date.now().toString());
-
-        // Проверяем, есть ли refreshToken (должен быть сохранен в компоненте)
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) {
-          console.warn("Refresh token not found during login");
-        }
       } catch (error) {
         console.error("Error in login action:", error);
         this.logout();
@@ -41,12 +40,11 @@ export const useUserStore = defineStore("user", {
     },
 
     logout() {
-      // Перед выходом пытаемся отозвать refreshToken
       const refreshToken = localStorage.getItem("refreshToken");
       if (refreshToken) {
-        // Можно вызвать API для отзыва токена, но не блокируем выход
         try {
-          // await revokeToken(refreshToken); // Раскомментировать, когда будет готово
+          // TODO:
+          // await revokeToken(refreshToken);
         } catch (error) {
           console.error("Error revoking token:", error);
         }
@@ -54,11 +52,13 @@ export const useUserStore = defineStore("user", {
 
       this.token = null;
       this.username = null;
+      this.email = null;
       this.userId = null;
       this.isAdmin = false;
 
       localStorage.removeItem("accessToken");
       localStorage.removeItem("username");
+      localStorage.removeItem("email");
       localStorage.removeItem("userId");
       localStorage.removeItem("isAdmin");
       localStorage.removeItem("loginTimestamp");
@@ -72,12 +72,24 @@ export const useUserStore = defineStore("user", {
 
         const payload = parseJwt(newToken);
         if (payload) {
+          const userId = payload.nameid;
+          const username = payload.unique_name;
+          const email = payload.email;
           const role = payload.role;
-          const userId = payload.nameid || payload.sub;
 
           if (userId) {
             this.userId = userId;
             localStorage.setItem("userId", userId);
+          }
+
+          if (username) {
+            this.username = username;
+            localStorage.setItem("username", username);
+          }
+
+          if (email) {
+            this.email = email;
+            localStorage.setItem("email", email);
           }
 
           if (role) {
