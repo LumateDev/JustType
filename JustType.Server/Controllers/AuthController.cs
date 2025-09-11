@@ -26,7 +26,7 @@ namespace JustType.Server.Controllers
             {
                 var user = await _authService.RegisterAsync(registerDto);
                 if (user == null)
-                    return BadRequest(new { Message = "User with this login already exists." });
+                    return BadRequest(new { Message = "User with this username already exists." });
 
                 return Ok(new { Message = "User registered successfully.", UserId = user.Id });
             }
