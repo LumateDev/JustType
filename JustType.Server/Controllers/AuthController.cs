@@ -37,14 +37,32 @@ namespace JustType.Server.Controllers
             }
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDto loginDto)
+        [HttpPost("login/username")]
+        public async Task<IActionResult> LoginByUsername(LoginByUsernameDto loginDto)
         {
             try
             {
                 var result = await _authService.LoginAsync(loginDto);
                 if (result == null)
-                    return Unauthorized(new { Message = "Invalid login or password." });
+                    return Unauthorized(new { Message = "Invalid username or password." });
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during login");
+                return StatusCode(500, new { Message = "An error occurred during login." });
+            }
+        }
+
+        [HttpPost("login/email")]
+        public async Task<IActionResult> LoginByEmail (LoginByEmailDto loginDto)
+        {
+            try
+            {
+                var result = await _authService.LoginAsync(loginDto);
+                if (result == null)
+                    return Unauthorized(new { Message = "Invalid email or password." });
 
                 return Ok(result);
             }

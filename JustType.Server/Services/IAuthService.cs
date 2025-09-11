@@ -6,7 +6,9 @@ namespace JustType.Server.Services
     public interface IAuthService
     {
         Task<User?> RegisterAsync(RegisterDto registerDto);
-        Task<LoginResponseDto?> LoginAsync(LoginDto loginDto);
+        Task<LoginResponseDto?> LoginAsync(LoginByUsernameDto loginDto);
+        Task<LoginResponseDto?> LoginAsync(LoginByEmailDto loginDto);
+
         Task<LoginResponseDto?> RefreshTokenAsync(string refreshToken);
         Task<bool> RevokeRefreshTokenAsync(string refreshToken);
     }

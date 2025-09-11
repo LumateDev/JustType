@@ -19,24 +19,44 @@ namespace JustType.Server.Services
             _logger = logger;
         }
 
-        public async Task<LoginResponseDto?> LoginAsync(LoginDto loginDto)
+        public async Task<LoginResponseDto?> LoginAsync(LoginByUsernameDto loginDto)
         {
-            if (loginDto == null) throw new ArgumentNullException(nameof(loginDto));
+            return await LoginInternalAsync(loginDto.Username, loginDto.Password);
+        }
 
-            _logger.LogInformation("Login attempt for user: {Login}", loginDto.Login);
+        public async Task<LoginResponseDto?> LoginAsync(LoginByEmailDto loginDto)
+        {
+            return await LoginInternalAsync(loginDto.Email, loginDto.Password);
+        }
+
+        // in this method identifier can be email or username
+        private async Task<LoginResponseDto?> LoginInternalAsync(string identifier, string password)
+        {
+            if (string.IsNullOrEmpty(identifier))
+                throw new ArgumentNullException(nameof(identifier));
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentNullException(nameof(password));
+
+            _logger.LogInformation("Login attempt for: {Identifier}", identifier);
 
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Login == loginDto.Login);
+                .FirstOrDefaultAsync(u => u.Username == identifier || u.Email == identifier);
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+            if (user == null)
             {
-                _logger.LogWarning("Login failed for user: {Login}", loginDto.Login);
+                _logger.LogWarning("User not found: {Identifier}", identifier);
+                return null;
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+            {
+                _logger.LogWarning("Login failed for user: {Identifier}", identifier);
                 return null;
             }
 
             if (user.Status != UserStatus.Active)
             {
-                _logger.LogWarning("Login failed: User {Login} is not active", loginDto.Login);
+                _logger.LogWarning("Login failed: User {Identifier} is not active", identifier);
                 return null;
             }
 
@@ -56,7 +76,7 @@ namespace JustType.Server.Services
             await _context.RefreshTokens.AddAsync(refreshToken);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("User {Login} successfully logged in", loginDto.Login);
+            _logger.LogInformation("User {Identifier} successfully logged in", identifier);
 
             return new LoginResponseDto
             {
@@ -64,6 +84,39 @@ namespace JustType.Server.Services
                 RefreshToken = refreshToken.Token,
                 ExpiresIn = 900 // 15 минут в секундах
             };
+        }
+
+        public async Task<User?> RegisterAsync(RegisterDto registerDto)
+        {
+            if (registerDto == null) throw new ArgumentNullException(nameof(registerDto));
+
+            if (await _context.Users.AnyAsync(u => u.Username == registerDto.Username))
+            {
+                _logger.LogWarning("Username already exists: {Username}", registerDto.Username);
+                return null;
+            }
+
+            if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
+            {
+                _logger.LogWarning("Email already exists: {Email}", registerDto.Email);
+                return null;
+            }
+
+
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Username = registerDto.Username.Trim(),
+                Email = registerDto.Email.Trim().ToLower(),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
+                Role = UserRole.User,
+                Status = UserStatus.Active
+            };
+
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
+
+            return user;
         }
 
         public async Task<LoginResponseDto?> RefreshTokenAsync(string refreshToken)
@@ -118,26 +171,6 @@ namespace JustType.Server.Services
             return true;
         }
 
-        public async Task<User?> RegisterAsync(RegisterDto registerDto)
-        {
-            if (registerDto == null) throw new ArgumentNullException(nameof(registerDto));
-
-            if (await _context.Users.AnyAsync(u => u.Login == registerDto.Login))
-                return null;
-
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                Login = registerDto.Login.Trim(),
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
-                Role = UserRole.User,
-                Status = UserStatus.Active
-            };
-
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
-
-            return user;
-        }
+        
     }
 }
