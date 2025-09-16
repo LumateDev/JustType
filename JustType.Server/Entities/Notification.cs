@@ -26,8 +26,7 @@ namespace JustType.Server.Entities
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Required]
-        public DateTime ReadAt {  get; set; }
+        public DateTime? ReadAt {  get; set; }
 
         [Required]
         public Guid UserId { get; set; }
