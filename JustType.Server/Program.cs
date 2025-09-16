@@ -80,13 +80,29 @@ namespace JustType.Server
             // CORS
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("VueAppPolicy", policy =>
+                if (builder.Environment.IsDevelopment())
                 {
-                    policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
-                          .AllowAnyHeader()
-                          .AllowAnyMethod()
-                          .AllowCredentials();
-                });
+                    options.AddPolicy("DevelopmentPolicy", policy =>
+                    {
+                        policy.AllowAnyOrigin()
+                              .AllowAnyHeader()
+                              .AllowAnyMethod();
+                    });
+                }
+                else
+                {
+                    options.AddPolicy("ProductionPolicy", policy =>
+                    {
+                        policy.WithOrigins(
+                        "http://localhost:5068",
+                        "https://localhost:5068"
+                        )
+                              .AllowAnyHeader()
+                              .AllowAnyMethod()
+                              .AllowCredentials();
+                    });
+                }
+           
             });
 
             var app = builder.Build();
@@ -98,10 +114,15 @@ namespace JustType.Server
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
+                app.UseCors("DevelopmentPolicy");
+            }
+            else
+            {
+                app.UseCors("ProductionPolicy");
             }
 
+
             app.UseHttpsRedirection();
-            app.UseCors("VueAppPolicy");
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
